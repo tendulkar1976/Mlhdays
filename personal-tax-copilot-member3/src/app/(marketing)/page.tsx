@@ -1,61 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { getApiClient } from "@/lib/api/client";
-import { TaxTwin, FinancialFact } from "@/types/schema";
-import { RegimeComparisonResult } from "@/types/tax";
-import { formatINR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge, VerificationBadge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import {
   ShieldCheck,
   Layers,
   Sparkles,
   ArrowRight,
-  Info,
   MessageSquare,
   FlaskConical,
   FileCheck2,
   ListTodo,
   CheckCircle2,
-  Zap,
 } from "lucide-react";
 
 export default function MarketingLandingPage() {
-  const [loading, setLoading] = useState(true);
-  const [twin, setTwin] = useState<TaxTwin | null>(null);
-  const [facts, setFacts] = useState<FinancialFact[]>([]);
-  const [comparison, setComparison] = useState<RegimeComparisonResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadInitialData() {
-      try {
-        setLoading(true);
-        const client = getApiClient();
-        const twins = await client.getTaxTwins();
-        const activeTwin = twins.find((t) => t.is_active_baseline) || twins[0];
-
-        if (activeTwin) {
-          const { twin: t, facts: f } = await client.getTaxTwin(activeTwin.id);
-          setTwin(t);
-          setFacts(f);
-          const comp = await client.compareRegimes(activeTwin.id);
-          setComparison(comp);
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load tax copilot data");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadInitialData();
-  }, []);
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Top Navigation */}
@@ -87,9 +48,9 @@ export default function MarketingLandingPage() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 flex-1">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-white via-slate-50 to-teal-50/20 rounded-3xl border border-slate-200/80 p-8 sm:p-10 shadow-sm relative overflow-hidden">
+        <section className="bg-gradient-to-br from-white via-slate-50 to-teal-50/30 rounded-3xl border border-slate-200/80 p-8 sm:p-12 shadow-sm relative overflow-hidden">
           <div className="max-w-3xl space-y-5 relative z-10">
             <Badge className="bg-teal-100 text-teal-800 border-teal-300 px-3 py-1 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 mr-1 text-teal-600" /> AI Personal Tax Copilot & Immutable Tax Twin
@@ -114,7 +75,7 @@ export default function MarketingLandingPage() {
           </div>
 
           {/* Architectural Pillars */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 pt-8 border-t border-slate-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-slate-200">
             <div className="flex items-start space-x-3.5">
               <div className="p-2.5 rounded-xl bg-teal-100/80 text-teal-800 shrink-0">
                 <Layers className="w-5 h-5" />
@@ -154,10 +115,15 @@ export default function MarketingLandingPage() {
         </section>
 
         {/* Feature Navigation Cards */}
-        <section className="space-y-4">
+        <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Explore Core Capabilities</h2>
-            <span className="text-xs text-slate-500">Live Workspace Modules</span>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Explore Core Capabilities</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Comprehensive tax planning and compliance modules</p>
+            </div>
+            <span className="text-xs font-semibold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200">
+              Live Workspace Modules
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -165,7 +131,7 @@ export default function MarketingLandingPage() {
               href="/copilot"
               className="p-5 rounded-2xl border bg-white hover:border-teal-500 hover:shadow-md transition-all group flex flex-col justify-between"
             >
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="h-10 w-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors">
                   <MessageSquare className="h-5 w-5" />
                 </div>
@@ -183,7 +149,7 @@ export default function MarketingLandingPage() {
               href="/what-if"
               className="p-5 rounded-2xl border bg-white hover:border-teal-500 hover:shadow-md transition-all group flex flex-col justify-between"
             >
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
                   <FlaskConical className="h-5 w-5" />
                 </div>
@@ -201,7 +167,7 @@ export default function MarketingLandingPage() {
               href="/documents"
               className="p-5 rounded-2xl border bg-white hover:border-teal-500 hover:shadow-md transition-all group flex flex-col justify-between"
             >
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <FileCheck2 className="h-5 w-5" />
                 </div>
@@ -219,7 +185,7 @@ export default function MarketingLandingPage() {
               href="/action-plan"
               className="p-5 rounded-2xl border bg-white hover:border-teal-500 hover:shadow-md transition-all group flex flex-col justify-between"
             >
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                   <ListTodo className="h-5 w-5" />
                 </div>
@@ -234,133 +200,10 @@ export default function MarketingLandingPage() {
             </Link>
           </div>
         </section>
-
-        {/* Live Tax Twin & Regime Comparison Showcase */}
-        <section className="space-y-4 pt-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900">
-                Live Tax Twin & Regime Comparison
-              </h2>
-              <p className="text-xs text-slate-500">
-                Authoritative calculations computed via Finance Act 2025 rule engine.
-              </p>
-            </div>
-            {twin && (
-              <Badge variant="outline" className="font-mono text-xs bg-slate-100 w-fit">
-                Active Snapshot: Twin v{twin.version} ({twin.id})
-              </Badge>
-            )}
-          </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertTitle>API Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-              <div className="h-64 bg-slate-200 rounded-2xl" />
-              <div className="h-64 bg-slate-200 rounded-2xl" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Regime Comparison Summary Card */}
-              {comparison && (
-                <Card className="lg:col-span-2 shadow-sm border bg-white">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-base">Authoritative Regime Comparison</CardTitle>
-                        <CardDescription className="text-xs mt-0.5">
-                          Statutory Baseline: <span className="font-mono text-slate-700 font-medium">{comparison.rule_version}</span> ({comparison.tax_period})
-                        </CardDescription>
-                      </div>
-                      <Badge variant="regime_recommended" className="text-xs">
-                        Recommended: {comparison.recommended_regime} Regime
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* New Regime Box */}
-                      <div className="p-4 rounded-xl border-2 border-teal-500/40 bg-teal-50/30 space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-xs text-teal-900">New Tax Regime</span>
-                          <Badge variant="regime_new">Sec 115BAC</Badge>
-                        </div>
-                        <div className="text-2xl font-bold text-slate-900">
-                          {formatINR(comparison.new_regime.total_tax)}
-                        </div>
-                        <div className="text-[11px] text-slate-500">
-                          Effective rate: {comparison.new_regime.effective_tax_rate_percent}% on {formatINR(comparison.new_regime.taxable_income)}
-                        </div>
-                      </div>
-
-                      {/* Old Regime Box */}
-                      <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-xs text-slate-800">Old Tax Regime</span>
-                          <Badge variant="regime_old">Standard Slabs</Badge>
-                        </div>
-                        <div className="text-2xl font-bold text-slate-900">
-                          {formatINR(comparison.old_regime.total_tax)}
-                        </div>
-                        <div className="text-[11px] text-slate-500">
-                          Effective rate: {comparison.old_regime.effective_tax_rate_percent}% on {formatINR(comparison.old_regime.taxable_income)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <Alert variant="info" className="py-2.5">
-                      <Info className="w-4 h-4" />
-                      <AlertTitle className="text-xs font-semibold">Statutory Benefit Rationale</AlertTitle>
-                      <AlertDescription className="text-xs mt-0.5 leading-relaxed">
-                        {comparison.recommendation_rationale}
-                      </AlertDescription>
-                    </Alert>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Tax Twin Facts Card */}
-              <Card className="shadow-sm border bg-white">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Tax Twin Facts</CardTitle>
-                    <span className="text-xs text-slate-500">{facts.length} facts registered</span>
-                  </div>
-                  <CardDescription className="text-xs">
-                    Immutable financial facts attached to active snapshot.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2.5">
-                  {facts.slice(0, 4).map((fact) => (
-                    <div
-                      key={fact.id}
-                      className="p-2.5 rounded-lg border bg-slate-50/60 flex items-center justify-between text-xs"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="font-medium text-slate-900">{fact.display_label}</div>
-                        <div className="text-slate-400 text-[10px]">{fact.source_document || "Self-reported"}</div>
-                      </div>
-                      <div className="text-right space-y-1">
-                        <div className="font-semibold text-slate-900">{formatINR(fact.amount)}</div>
-                        <VerificationBadge state={fact.verification_state} />
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-white py-6 text-center text-xs text-slate-400">
+      <footer className="border-t bg-white py-6 text-center text-xs text-slate-500">
         <p>© 2026 TaxCopilot AI. Built with deterministic accuracy under Finance Act 2025.</p>
       </footer>
     </div>
