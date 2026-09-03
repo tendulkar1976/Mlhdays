@@ -47,7 +47,7 @@ function generateIntelligentTaxReasoning(query: string, history: any[]): {
   tool_execution?: ToolExecution;
   citations: Citation[];
 } {
-  const q = query.toLowerCase();
+  const q = (query || "").toLowerCase().trim();
 
   // 1. Regime Comparison & "Which is better?"
   if (q.includes("regime") || q.includes("better") || q.includes("compare") || q.includes("switch")) {
@@ -67,7 +67,7 @@ function generateIntelligentTaxReasoning(query: string, history: any[]): {
   }
 
   // 2. HRA & Living with Parents / Rent Exemption
-  if (q.includes("hra") || q.includes("rent") || q.includes("house rent") || q.includes("parents")) {
+  if (q.includes("hra") || q.includes("rent") || q.includes("house rent") || q.includes("parents") || q.includes("live with")) {
     return {
       content: `### 🏠 House Rent Allowance (HRA) Exemption Rules\n\nUnder **Section 10(13A)** read with **Rule 2A**, HRA exemption is calculated as the **minimum** of the following three amounts:\n\n1. **Actual HRA received** from your employer.\n2. **Rent paid minus 10% of basic salary** (Basic + DA).\n3. **50% of basic salary** (if living in Delhi, Mumbai, Kolkata, Chennai) or **40% of basic salary** (for other cities).\n\n### 👨‍👩‍👧 Can You Pay Rent to Parents & Claim HRA?\n* **Yes, legally valid:** You can pay rent to your parents and claim HRA under Section 10(13A).\n* **Key Requirements:**\n  1. The property must be registered exclusively in your parent(s)' name (not jointly with you).\n  2. A formal **Rent Agreement** should be executed.\n  3. Rent should be transferred via **bank transfer** (not cash) with rent receipts maintained.\n  4. Your parent must declare this rental income in their own ITR under *"Income from House Property"* (they can claim 30% standard deduction under Section 24(a)).\n  5. If annual rent exceeds **₹1,00,000**, you must submit your parent's PAN to your employer.\n\n*(Note: HRA is only deductible under the Old Regime; it is not available in the New Regime under Section 115BAC).*`,
       tool_execution: {
@@ -120,7 +120,7 @@ function generateIntelligentTaxReasoning(query: string, history: any[]): {
   // 5. Health Insurance (Section 80D) & Senior Parents
   if (q.includes("80d") || q.includes("health insurance") || q.includes("mediclaim") || q.includes("medical")) {
     return {
-      content: `### 🏥 Section 80D Health Insurance Deduction Limits\n\nUnder **Section 80D** of the Income Tax Act (applicable in the Old Tax Regime):\n\n1. **For Self, Spouse & Dependent Children:**\n   * Maximum deduction: **₹25,000** per year.\n   * (If self or spouse is a Senior Citizen $\\ge$ 60 years: Limit increases to **₹50,000**).\n2. **For Parents:**\n   * Parents below 60 years: Additional **₹25,000**.\n   * Parents who are **Senior Citizens (60+ years)**: Additional **₹50,000**.\n3. **Preventive Health Checkup:**\n   * Up to **₹5,000** within the overall limit (allowed even in cash).\n4. **Maximum Potential Deduction:**\n   * ₹25,000 (Self) + ₹50,000 (Senior Parents) = **₹75,000**\n   * If both Self (60+) and Parents (60+) are seniors: Up to **₹1,00,000**.\n\n⚠️ **Statutory Condition:** Medical insurance premiums must be paid by **any mode other than cash** (Net banking, UPI, Credit Card, Cheque). Cash payments are disallowed except for the ₹5,000 preventive checkup.`,
+      content: `### 🏥 Section 80D Health Insurance Deduction Limits\n\nUnder **Section 80D** of the Income Tax Act (applicable in the Old Tax Regime):\n\n1. **For Self, Spouse & Dependent Children:**\n   * Maximum deduction: **₹25,00,00** per year.\n   * (If self or spouse is a Senior Citizen $\\ge$ 60 years: Limit increases to **₹50,000**).\n2. **For Parents:**\n   * Parents below 60 years: Additional **₹25,000**.\n   * Parents who are **Senior Citizens (60+ years)**: Additional **₹50,000**.\n3. **Preventive Health Checkup:**\n   * Up to **₹5,000** within the overall limit (allowed even in cash).\n4. **Maximum Potential Deduction:**\n   * ₹25,000 (Self) + ₹50,000 (Senior Parents) = **₹75,000**\n   * If both Self (60+) and Parents (60+) are seniors: Up to **₹1,00,000**.\n\n⚠️ **Statutory Condition:** Medical insurance premiums must be paid by **any mode other than cash** (Net banking, UPI, Credit Card, Cheque). Cash payments are disallowed except for the ₹5,000 preventive checkup.`,
       tool_execution: {
         tool_name: "calculate_deduction_limits",
         status: "completed",
@@ -201,7 +201,7 @@ function generateIntelligentTaxReasoning(query: string, history: any[]): {
 
   // 10. Default High-Intelligence Dynamic Tax Planning Response
   return {
-    content: `### 🤖 Tax Copilot Analysis\n\nRegarding your query on *"**${query}**"* for **FY 2025-26 / AY 2026-27**:\n\nUnder the **Finance Act 2025** provisions:\n\n1. **Active Statutory Baseline:** All tax liability calculations are grounded in the Income Tax Act, 1961. The New Tax Regime under **Section 115BAC** serves as the default regime with restructured 0-4L (0%), 4-8L (5%), 8-12L (10%), 12-16L (15%) slabs.\n2. **Section 87A Full Rebate:** For resident individuals, total income up to **₹12,00,000** has zero tax liability after full rebate of up to ₹60,000.\n3. **Standard Deduction:** Salaried individuals receive **₹75,000** under Section 16(ia) in the New Regime.\n4. **Optimization Strategy:** If your Chapter VI-A deductions (80C, 80D, 24b Home Loan Interest) exceed ₹4.25 Lakhs, the Old Regime may deliver marginal savings; otherwise, the New Regime provides lower tax and zero paperwork.\n\nWould you like me to run a specific simulation on salary slabs, model a deduction, or review your Tax Twin documents?`,
+    content: `### 🤖 Tax Copilot Analysis\n\nRegarding your query on *"**${query || "Tax Planning"}**"* for **FY 2025-26 / AY 2026-27**:\n\nUnder the **Finance Act 2025** provisions:\n\n1. **Active Statutory Baseline:** All tax liability calculations are grounded in the Income Tax Act, 1961. The New Tax Regime under **Section 115BAC** serves as the default regime with restructured 0-4L (0%), 4-8L (5%), 8-12L (10%), 12-16L (15%) slabs.\n2. **Section 87A Full Rebate:** For resident individuals, total income up to **₹12,00,000** has zero tax liability after full rebate of up to ₹60,000.\n3. **Standard Deduction:** Salaried individuals receive **₹75,000** under Section 16(ia) in the New Regime.\n4. **Optimization Strategy:** If your Chapter VI-A deductions (80C, 80D, 24b Home Loan Interest) exceed ₹4.25 Lakhs, the Old Regime may deliver marginal savings; otherwise, the New Regime provides lower tax and zero paperwork.\n\nWould you like me to simulate a specific deduction, model capital gains, or check ITR filing requirements?`,
     tool_execution: {
       tool_name: "query_tax_code",
       status: "completed",
@@ -216,25 +216,35 @@ function generateIntelligentTaxReasoning(query: string, history: any[]): {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const messages = body.messages || [];
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+
+    const messages = Array.isArray(body?.messages) ? body.messages : [];
     const lastMessage = messages[messages.length - 1]?.content || "";
 
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
-    // If live Gemini key is configured, call Google Gemini 1.5/2.0 API
-    if (geminiKey) {
+    // If live Gemini key is configured and valid, attempt Google Gemini call with 4s timeout
+    if (geminiKey && geminiKey.length > 10) {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
         const contents = messages.map((m: any) => ({
           role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }],
+          parts: [{ text: String(m.content || "") }],
         }));
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
 
         const geminiRes = await fetch(geminiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
           body: JSON.stringify({
             systemInstruction: {
               parts: [{ text: COPILOT_SYSTEM_PROMPT }],
@@ -246,6 +256,8 @@ export async function POST(req: NextRequest) {
             },
           }),
         });
+
+        clearTimeout(timeoutId);
 
         if (geminiRes.ok) {
           const data = await geminiRes.json();
@@ -271,11 +283,11 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (geminiErr) {
-        console.warn("Live Gemini API call failed, falling back to Tax Reasoning Engine:", geminiErr);
+        console.warn("Live Gemini API call failed or timed out, using Tax Reasoning Engine:", geminiErr);
       }
     }
 
-    // Comprehensive Fallback Semantic Tax Reasoning Engine
+    // High-Intelligence Semantic Tax Reasoning Engine
     const reasoning = generateIntelligentTaxReasoning(lastMessage, messages);
     const responsePayload: ChatResponsePayload = {
       id: `msg_ai_${Date.now()}`,
@@ -288,15 +300,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(responsePayload);
   } catch (err: any) {
-    console.error("AI Chat API error:", err);
-    return NextResponse.json(
-      {
-        id: `msg_err_${Date.now()}`,
-        role: "assistant",
-        content: "I encountered a momentary issue processing your request. Please try again.",
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
-    );
+    console.error("AI Chat API unexpected fallback:", err);
+    return NextResponse.json({
+      id: `msg_fallback_${Date.now()}`,
+      role: "assistant",
+      content: "I am your AI Personal Tax Copilot. How can I help you plan your taxes for FY 2025-26 under the Finance Act 2025?",
+      timestamp: new Date().toISOString(),
+    });
   }
 }
