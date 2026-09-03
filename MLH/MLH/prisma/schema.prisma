@@ -1,0 +1,356 @@
+// Prisma schema for AI-Powered Personal Tax Copilot
+// Source of truth for database entities and relationships
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VerificationState {
+  VERIFIED
+  NEEDS_CONFIRMATION
+  CONFLICT
+  EXPERT_REVIEW
+}
+
+enum TaxRegime {
+  NEW
+  OLD
+}
+
+enum ResidentialStatus {
+  RESIDENT
+  NON_RESIDENT
+  RNOR // Resident but Not Ordinarily Resident
+}
+
+enum IncomeCategory {
+  SALARY
+  HOUSE_PROPERTY
+  CAPITAL_GAINS
+  BUSINESS_PROFESSION
+  OTHER_SOURCES
+}
+
+enum DocumentType {
+  FORM_16
+  FORM_26AS
+  AIS_TIS
+  BANK_STATEMENT
+  RENT_RECEIPT
+  CAPITAL_GAINS_STATEMENT
+  OTHER
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  PARSED
+  FAILED
+}
+
+enum ActionItemStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DISMISSED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  fullName     String?       @map("full_name")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  taxProfiles  TaxProfile[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model TaxPeriod {
+  id             String        @id @default(uuid())
+  financialYear  String        @unique @map("financial_year") // e.g. "2025-2026"
+  assessmentYear String        @map("assessment_year")        // e.g. "2026-2027"
+  startDate      DateTime      @map("start_date")
+  endDate        DateTime      @map("end_date")
+  isCurrent      Boolean       @default(false) @map("is_current")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  taxTwins       TaxTwin[]
+  taxCalculations TaxCalculation[]
+
+  @@map("tax_periods")
+}
+
+model TaxProfile {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  panNumber         String?           @map("pan_number")
+  dateOfBirth       DateTime?         @map("date_of_birth")
+  residentialStatus ResidentialStatus @default(RESIDENT) @map("residential_status")
+  regimePreference  TaxRegime         @default(NEW) @map("regime_preference")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taxTwins          TaxTwin[]
+
+  @@map("tax_profiles")
+}
+
+model TaxTwin {
+  id              String            @id @default(uuid())
+  taxProfileId    String            @map("tax_profile_id")
+  taxPeriodId     String            @map("tax_period_id")
+  versionNumber   Int               @default(1) @map("version_number")
+  parentTwinId    String?           @map("parent_twin_id")
+  isActive        Boolean           @default(true) @map("is_active")
+  isLocked        Boolean           @default(false) @map("is_locked") // Immutable once calculated / locked
+  changeSummary   String?           @map("change_summary")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  taxProfile      TaxProfile        @relation(fields: [taxProfileId], references: [id], onDelete: Cascade)
+  taxPeriod       TaxPeriod         @relation(fields: [taxPeriodId], references: [id])
+  parentTwin      TaxTwin?          @relation("TwinHistory", fields: [parentTwinId], references: [id])
+  childTwins      TaxTwin[]         @relation("TwinHistory")
+
+  // Critical Invariant: Facts, income sources, and transactions reference tax_twin_id
+  facts           Fact[]
+  incomeSources   IncomeSource[]
+  transactions    Transaction[]
+  calculations    TaxCalculation[]
+  scenarios       Scenario[]
+  reconciliations ReconciliationRecord[]
+  recommendations Recommendation[]
+  actionItems     ActionItem[]
+  decisionLogs    DecisionLog[]
+
+  @@unique([taxProfileId, taxPeriodId, versionNumber])
+  @@index([taxProfileId, isActive])
+  @@map("tax_twins")
+}
+
+model Fact {
+  id                String            @id @default(uuid())
+  taxTwinId         String            @map("tax_twin_id")
+  factKey           String            @map("fact_key") // e.g., "deduction_80c", "hra_exemption", "home_loan_interest"
+  category          String
+  factValue         Json              @map("fact_value")
+  verificationState VerificationState @default(NEEDS_CONFIRMATION) @map("verification_state")
+  confidenceScore   Decimal?          @map("confidence_score") @db.Decimal(5, 4)
+  sourceId          String?           @map("source_id")
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  taxTwin           TaxTwin           @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+  source            Source?           @relation(fields: [sourceId], references: [id])
+
+  @@index([taxTwinId, factKey])
+  @@map("facts")
+}
+
+model IncomeSource {
+  id                String            @id @default(uuid())
+  taxTwinId         String            @map("tax_twin_id")
+  category          IncomeCategory
+  employerOrPayer   String?           @map("employer_or_payer")
+  tanNumber         String?           @map("tan_number")
+  grossAmount       Decimal           @map("gross_amount") @db.Decimal(14, 2)
+  taxDeductedAtSource Decimal         @default(0) @map("tax_deducted_at_source") @db.Decimal(14, 2)
+  verificationState VerificationState @default(NEEDS_CONFIRMATION) @map("verification_state")
+  confidenceScore   Decimal?          @map("confidence_score") @db.Decimal(5, 4)
+  sourceId          String?           @map("source_id")
+  metadata          Json?
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  taxTwin           TaxTwin           @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+  source            Source?           @relation(fields: [sourceId], references: [id])
+
+  @@index([taxTwinId, category])
+  @@map("income_sources")
+}
+
+model Transaction {
+  id                String            @id @default(uuid())
+  taxTwinId         String            @map("tax_twin_id")
+  transactionDate   DateTime          @map("transaction_date")
+  description       String
+  amount            Decimal           @db.Decimal(14, 2)
+  taxCategory       String?           @map("tax_category") // e.g. "80D_HEALTH_INSURANCE", "NPS_TIER_1"
+  verificationState VerificationState @default(NEEDS_CONFIRMATION) @map("verification_state")
+  sourceId          String?           @map("source_id")
+  metadata          Json?
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  taxTwin           TaxTwin           @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+  source            Source?           @relation(fields: [sourceId], references: [id])
+
+  @@index([taxTwinId, taxCategory])
+  @@map("transactions")
+}
+
+model Source {
+  id                String            @id @default(uuid())
+  sourceType        String            @map("source_type") // "DOCUMENT_EXTRACTION", "USER_INPUT", "INTEGRATION"
+  documentId        String?           @map("document_id")
+  extractionId      String?           @map("extraction_id")
+  description       String?
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  document          Document?         @relation(fields: [documentId], references: [id])
+  extraction        Extraction?       @relation(fields: [extractionId], references: [id])
+  facts             Fact[]
+  incomeSources     IncomeSource[]
+  transactions      Transaction[]
+
+  @@map("sources")
+}
+
+model Document {
+  id           String         @id @default(uuid())
+  taxProfileId String         @map("tax_profile_id")
+  fileName     String         @map("file_name")
+  fileType     DocumentType   @map("file_type")
+  storageKey   String         @map("storage_key")
+  status       DocumentStatus @default(UPLOADED)
+  uploadedAt   DateTime       @default(now()) @map("uploaded_at")
+
+  extractions  Extraction[]
+  sources      Source[]
+
+  @@map("documents")
+}
+
+model Extraction {
+  id             String            @id @default(uuid())
+  documentId     String            @map("document_id")
+  rawExtracted   Json              @map("raw_extracted")
+  confidenceScore Decimal?         @map("confidence_score") @db.Decimal(5, 4)
+  extractedAt    DateTime          @default(now()) @map("extracted_at")
+
+  document       Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sources        Source[]
+
+  @@map("extractions")
+}
+
+model TaxCalculation {
+  id               String      @id @default(uuid())
+  taxTwinId        String?     @map("tax_twin_id")
+  taxPeriodId      String?     @map("tax_period_id")
+  ruleVersion      String      @map("rule_version")
+  regime           TaxRegime
+  grossTotalIncome Decimal     @map("gross_total_income") @db.Decimal(14, 2)
+  totalDeductions  Decimal     @map("total_deductions") @db.Decimal(14, 2)
+  taxableIncome    Decimal     @map("taxable_income") @db.Decimal(14, 2)
+  taxBeforeRebate  Decimal     @map("tax_before_rebate") @db.Decimal(14, 2)
+  rebate           Decimal     @default(0) @db.Decimal(14, 2)
+  surcharge        Decimal     @default(0) @db.Decimal(14, 2)
+  cess             Decimal     @default(0) @db.Decimal(14, 2)
+  totalTax         Decimal     @map("total_tax") @db.Decimal(14, 2)
+  assumptions      Json
+  warnings         Json
+  calculationTrace Json        @map("calculation_trace")
+  createdAt        DateTime    @default(now()) @map("created_at")
+
+  taxTwin          TaxTwin?    @relation(fields: [taxTwinId], references: [id], onDelete: SetNull)
+  taxPeriod        TaxPeriod?  @relation(fields: [taxPeriodId], references: [id])
+
+  @@index([taxTwinId])
+  @@map("tax_calculations")
+}
+
+model Scenario {
+  id             String      @id @default(uuid())
+  taxTwinId      String      @map("tax_twin_id")
+  name           String
+  description    String?
+  proposedDiff   Json        @map("proposed_diff")
+  simulatedResult Json?      @map("simulated_result")
+  isApplied      Boolean     @default(false) @map("is_applied")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  taxTwin        TaxTwin     @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+
+  @@map("scenarios")
+}
+
+model ReconciliationRecord {
+  id                 String            @id @default(uuid())
+  taxTwinId          String            @map("tax_twin_id")
+  documentId         String?           @map("document_id")
+  factKey            String            @map("fact_key")
+  originalValue      Json?             @map("original_value")
+  extractedValue     Json              @map("extracted_value")
+  resolutionState    VerificationState @default(NEEDS_CONFIRMATION) @map("resolution_state")
+  resolutionNote     String?           @map("resolution_note")
+  resultingTwinId    String?           @map("resulting_twin_id")
+  createdAt          DateTime          @default(now()) @map("created_at")
+
+  taxTwin            TaxTwin           @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+
+  @@map("reconciliation_records")
+}
+
+model Recommendation {
+  id             String      @id @default(uuid())
+  taxTwinId      String      @map("tax_twin_id")
+  category       String      // e.g. "REGIME_CHOICE", "TAX_SAVING_80D", "NPS"
+  title          String
+  description    String
+  potentialSavings Decimal?  @map("potential_savings") @db.Decimal(14, 2)
+  isDismissed    Boolean     @default(false) @map("is_dismissed")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  taxTwin        TaxTwin     @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+
+  @@map("recommendations")
+}
+
+model ActionItem {
+  id          String           @id @default(uuid())
+  taxTwinId   String           @map("tax_twin_id")
+  title       String
+  description String?
+  dueDate     DateTime?        @map("due_date")
+  status      ActionItemStatus @default(PENDING)
+  priority    String           @default("MEDIUM")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  taxTwin     TaxTwin          @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+
+  @@map("action_items")
+}
+
+model DecisionLog {
+  id           String      @id @default(uuid())
+  taxTwinId    String      @map("tax_twin_id")
+  decisionType String      @map("decision_type")
+  rationale    String
+  metadata     Json?
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  taxTwin      TaxTwin     @relation(fields: [taxTwinId], references: [id], onDelete: Cascade)
+
+  @@map("decision_logs")
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String?     @map("user_id")
+  entityType String      @map("entity_type")
+  entityId   String      @map("entity_id")
+  action     String      // "CREATE_TWIN_V2", "RECONCILE_FACT", "CALCULATE_TAX"
+  details    Json?
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
