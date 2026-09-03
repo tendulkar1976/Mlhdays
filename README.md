@@ -185,11 +185,19 @@ npx vitest run
 
 ---
 
-## 👥 Team Division of Responsibilities
+## 👥 Team Division of Responsibilities (4-Member Team)
 
-* **Member 1 (Core Tax Engine & Database):** Authoritative deterministic calculation logic, PostgreSQL / Prisma schemas, stateless tax calculation traces, and Tax Twin version hashing.
-* **Member 2 (AI Orchestration & Document Intel):** Google Gemini LLM orchestration, controlled tool execution, RAG retriever, Form 16/AIS OCR confidence scoring, and document reconciliation assistant.
-* **Member 3 (Frontend UX & Deployment):** Next.js 14 web application, interactive Tax Twin timeline, What-If simulation lab, pre-flight action plan, and Vercel cloud deployment.
+* **Member 1 — Core Tax Engine & Database Architecture:**  
+  Authoritative deterministic calculation logic for Finance Act 2025 slabs, Section 87A rebate math, statutory calculation traces, PostgreSQL database design, and Prisma schemas.
+
+* **Member 2 — AI Orchestration & Gemini Tool-Calling:**  
+  Google Gemini LLM pipeline, zero-hallucination guardrails, controlled tool execution (`compare_regimes`, `calculate_tax`, `create_scenario`), and multi-domain semantic tax reasoning engine.
+
+* **Member 3 — Frontend Engineering & Cloud Deployment:**  
+  Next.js 14 web application architecture, responsive design system, real-time split-view onboarding, interactive Tax Twin lineage timeline, What-If simulation lab, and Vercel cloud CI/CD deployment.
+
+* **Member 4 — Document Intelligence & Reconciliation Engine:**  
+  Form 16 / AIS / 26AS OCR extraction pipeline, 4-state confidence evaluation matrix (`VERIFIED`, `CONFLICT`, `NEEDS_CONFIRMATION`), automated notice prevention algorithms (Section 139(9) & 143(1)), and statutory pre-flight compliance workflows.
 
 ---
 
