@@ -685,9 +685,28 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
   }
 
   async sendAIChat(messages: { role: "user" | "assistant"; content: string }[]): Promise<AIChatMessage> {
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+    } catch (err) {
+      console.warn("Direct /api/ai/chat fetch fallback:", err);
+    }
+
     const lastUserMessage = messages[messages.length - 1]?.content.toLowerCase() || "";
     let reply = "I am your personal AI Tax Copilot for Indian taxpayers. I analyze your immutable Tax Twin against versioned statutory tax rules for FY 2025-26 / AY 2026-27.";
-    let toolExecution: AIChatMessage["tool_execution"] | undefined = undefined;
+    let toolExecution: AIChatMessage["tool_execution"] | undefined = {
+      tool_name: "query_tax_code",
+      status: "completed",
+      summary: "Processed query against FY 2025-26 statutory income tax knowledge base",
+    };
     let citations: AIChatMessage["citations"] = [
       {
         source_title: "Income Tax Department Statutory Slabs (AY 2026-27)",
@@ -749,7 +768,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
         { source_title: "Statutory Return Filing Timelines", section: "Section 139(1)" },
       ];
     } else {
-      reply = "I have reviewed your Tax Twin v2. Your gross income is ₹14,68,500 and estimated tax is ₹1,02,986 under the New Regime. You have 1 pending conflict on AIS savings interest and 1 item requiring 80D confirmation. What would you like to explore?";
+      reply = `Regarding your query on **"${messages[messages.length - 1]?.content || "tax planning"}"** for FY 2025-26 / AY 2026-27:\n\n1. **Statutory Baseline:** Under the Finance Act 2025, the New Tax Regime (Section 115BAC) provides zero net tax on income up to ₹12,00,000 via Section 87A rebate and ₹75,000 standard deduction under Section 16(ia).\n2. **Chapter VI-A Deductions:** Sections 80C (up to ₹1.5L), 80D (health insurance up to ₹75k/₹1L for senior parents), and 24(b) (Home loan interest up to ₹2L) are deductible under the Old Regime.\n3. **Tax Twin Recommendation:** For your active profile (₹14.5L gross income), the New Regime delivers ₹27,586 lower tax.\n\nWould you like me to simulate a specific deduction, model capital gains, or check ITR filing requirements?`;
     }
 
     return {
