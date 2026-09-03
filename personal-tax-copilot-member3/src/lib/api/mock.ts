@@ -1,3 +1,16 @@
+import { TaxCopilotApiClient, OnboardingPayload } from "./types";
+import { TaxProfile, TaxTwin, FinancialFact } from "@/types/schema";
+import {
+  RegimeComparisonResult,
+  WhatIfScenarioInput,
+  WhatIfScenarioResult,
+  DocumentUploadResponse,
+  ReconciliationRecord,
+  ActionPlanItem,
+  AIChatMessage,
+  TaxDeadlineItem,
+} from "@/types/tax";
+
 let MOCK_FACTS_V1: FinancialFact[] = [
   {
     id: "fact_v1_01",
@@ -49,25 +62,12 @@ let MOCK_FACTS_V1: FinancialFact[] = [
   },
 ];
 
-import { TaxCopilotApiClient, OnboardingPayload } from "./types";
-import { TaxProfile, TaxTwin, FinancialFact } from "@/types/schema";
-import {
-  RegimeComparisonResult,
-  WhatIfScenarioInput,
-  WhatIfScenarioResult,
-  DocumentUploadResponse,
-  ReconciliationRecord,
-  ActionPlanItem,
-  AIChatMessage,
-  TaxDeadlineItem,
-} from "@/types/tax";
-
 const MOCK_PROFILE: TaxProfile = {
   id: "prof_in_001",
   user_id: "usr_taxpayer_01",
-  full_name: "Vikas A",
+  full_name: "Aditya Sharma",
   category: "SALARIED",
-  pan_masked: "ABCDEÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢F",
+  pan_masked: "ABCDE••••F",
   residency_status: "RESIDENT",
   age_category: "BELOW_60",
   created_at: "2026-04-01T10:00:00Z",
@@ -203,17 +203,17 @@ const MOCK_REGIME_COMPARISON: RegimeComparisonResult = {
       { slab_index: 7, from_amount: 2400000, to_amount: null, rate_percent: 30, taxable_amount_in_slab: 0, tax_amount_in_slab: 0 },
     ],
     assumptions: [
-      "Standard deduction of ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹75,000 claimed under Sec 16(ia) in New Regime",
+      "Standard deduction of ₹75,000 claimed under Sec 16(ia) in New Regime",
       "No Chapter VI-A deductions (80C, 80D, 24b) eligible under Sec 115BAC",
     ],
     warnings: [
-      "Total taxable income is ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹13,93,500, which exceeds the ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹12,00,000 threshold for Sec 87A rebate.",
+      "Total taxable income is ₹13,93,500, which exceeds the ₹12,00,000 threshold for Sec 87A rebate.",
     ],
     calculation_trace: [
       { step: 1, section_or_rule: "Sec 17(1)", label: "Gross Salary & Other Income", amount: 1468500, running_balance: 1468500, explanation: "Consolidated salary and savings interest facts" },
       { step: 2, section_or_rule: "Sec 16(ia)", label: "Standard Deduction (New Regime)", amount: -75000, running_balance: 1393500, explanation: "Statutory baseline standard deduction for salaried individuals" },
       { step: 3, section_or_rule: "Sec 115BAC(1A)", label: "Slab Tax Computation", amount: 99025, running_balance: 99025, explanation: "Progressive slabs computation across 0-4L, 4-8L, 8-12L, 12-16L" },
-      { step: 4, section_or_rule: "Sec 87A", label: "Tax Rebate", amount: 0, running_balance: 99025, explanation: "Rebate Nil (Taxable income > ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹12,00,000)" },
+      { step: 4, section_or_rule: "Sec 87A", label: "Tax Rebate", amount: 0, running_balance: 99025, explanation: "Rebate Nil (Taxable income > ₹12,00,000)" },
       { step: 5, section_or_rule: "Finance Act", label: "Health & Education Cess (4%)", amount: 3961, running_balance: 102986, explanation: "4% cess applied on tax after rebate" },
     ],
     created_at: "2026-05-12T14:16:00Z",
@@ -243,8 +243,8 @@ const MOCK_REGIME_COMPARISON: RegimeComparisonResult = {
       { slab_index: 4, from_amount: 1000000, to_amount: null, rate_percent: 30, taxable_amount_in_slab: 43500, tax_amount_in_slab: 13050 },
     ],
     assumptions: [
-      "Standard deduction of ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹50,000 under Sec 16(ia) in Old Regime",
-      "Chapter VI-A deductions claimed: 80C (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,50,000), 80D (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹25,000), Sec 24(b) (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹2,00,000)",
+      "Standard deduction of ₹50,000 under Sec 16(ia) in Old Regime",
+      "Chapter VI-A deductions claimed: 80C (₹1,50,000), 80D (₹25,000), Sec 24(b) (₹2,00,000)",
     ],
     warnings: [
       "Section 24(b) home loan interest deduction requires lender interest certificate before filing.",
@@ -253,7 +253,7 @@ const MOCK_REGIME_COMPARISON: RegimeComparisonResult = {
       { step: 1, section_or_rule: "Sec 17(1)", label: "Gross Total Income", amount: 1468500, running_balance: 1468500, explanation: "Consolidated salary and other income" },
       { step: 2, section_or_rule: "Sec 16(ia)", label: "Standard Deduction (Old Regime)", amount: -50000, running_balance: 1418500, explanation: "Standard deduction for salaried under Old Regime" },
       { step: 3, section_or_rule: "Sec 24(b)", label: "Home Loan Interest Loss", amount: -200000, running_balance: 1218500, explanation: "Maximum loss allowable for self-occupied property" },
-      { step: 4, section_or_rule: "Chapter VI-A", label: "Deductions (80C + 80D)", amount: -175000, running_balance: 1043500, explanation: "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,50,000 under 80C and ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹25,000 under 80D" },
+      { step: 4, section_or_rule: "Chapter VI-A", label: "Deductions (80C + 80D)", amount: -175000, running_balance: 1043500, explanation: "₹1,50,000 under 80C and ₹25,000 under 80D" },
       { step: 5, section_or_rule: "Schedule I", label: "Old Regime Slabs Tax", amount: 125550, running_balance: 125550, explanation: "Tax calculated under Old Regime slabs" },
       { step: 6, section_or_rule: "Finance Act", label: "Health & Education Cess (4%)", amount: 5022, running_balance: 130572, explanation: "4% cess applied on tax" },
     ],
@@ -261,7 +261,7 @@ const MOCK_REGIME_COMPARISON: RegimeComparisonResult = {
   },
   difference: 27586,
   recommended_regime: "NEW",
-  recommendation_rationale: "The New Tax Regime provides a net savings of ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹27,586 due to lower progressive slab rates, even after accounting for your ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹4,25,000 in Old Regime deductions.",
+  recommendation_rationale: "The New Tax Regime provides a net savings of ₹27,586 due to lower progressive slab rates, even after accounting for your ₹4,25,000 in Old Regime deductions.",
   net_tax_benefit_amount: 27586,
 };
 
@@ -286,9 +286,9 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
       tax_profile_id: MOCK_PROFILE.id,
       version: 1,
       is_active_baseline: true,
-      notes: "Initial progressive onboarding baseline",
+      notes: "Baseline progressive onboarding snapshot",
       created_at: new Date().toISOString(),
-      hash: "0x1a2b...c3d4",
+      hash: "0x8a9b...f1e2",
     };
 
     const initialFacts: FinancialFact[] = [
@@ -374,7 +374,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
       {
         scenario_id: "scen_nps_50k",
         baseline_twin_id: twinId,
-        name: "Additional ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹50,000 in NPS (Tier 1)",
+        name: "Additional ₹50,000 in NPS (Tier 1)",
         description: "Evaluating tax impact of additional voluntary contribution under Section 80CCD(1B)",
         proposed_modifications: [
           {
@@ -455,12 +455,10 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
       simulated_calculation: {
         ...baselineCalc,
         recommended_regime: recommendedRegime,
+        difference: netBenefit,
         net_tax_benefit_amount: netBenefit,
-        recommendation_rationale: `${recommendedRegime} Regime remains optimal with ₹${netBenefit.toLocaleString('en-IN')} lower tax liability after incorporating this scenario.`,
         old_regime: {
           ...baselineCalc.old_regime,
-          deductions_total: baselineCalc.old_regime.deductions_total + deltaTotal,
-          taxable_income: Math.max(0, baselineCalc.old_regime.taxable_income - deltaTotal),
           total_tax: simOldTax,
         },
         new_regime: {
@@ -482,15 +480,17 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
       tax_profile_id: MOCK_PROFILE.id,
       version: newVersion,
       is_active_baseline: true,
-      notes: `Applied What-If Scenario (${scenarioId}). Sealed snapshot.`,
+      notes: `Applied What-If Scenario (${scenarioId}). Baseline updated.`,
       created_at: new Date().toISOString(),
-      hash: "0x3e1d...f902",
+      hash: "0x3c5a...9e1f",
     };
+
     MOCK_TWINS = MOCK_TWINS.map((t) => ({ ...t, is_active_baseline: false }));
     MOCK_TWINS.push(newTwin);
+
     return {
       new_twin: newTwin,
-      message: `Scenario successfully applied! Created active Tax Twin v${newVersion}. Previous snapshots remain permanently immutable.`,
+      message: `Scenario applied successfully. Generated Tax Twin v${newVersion}.`,
     };
   }
 
@@ -549,7 +549,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
         confidence: 0.96,
         verification_state: "CONFLICT",
         source_document_title: "AIS (Annual Information Statement)",
-        conflict_explanation: "AIS reports ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹18,500 interest across 3 bank accounts vs ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹12,000 self-reported.",
+        conflict_explanation: "AIS reports ₹18,500 interest across 3 bank accounts vs ₹12,000 self-reported.",
       },
       {
         id: "recon_03",
@@ -648,7 +648,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
       {
         id: "act_01",
         title: "Reconcile Savings Bank Interest Conflict",
-        description: "AIS reports ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹18,500 interest vs ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹12,000 previously entered. Reconcile to prevent CP-2000 mismatch notice.",
+        description: "AIS reports ₹18,500 interest vs ₹12,000 previously entered. Reconcile to prevent CP-2000 mismatch notice.",
         category: "COMPLIANCE",
         status: "PENDING",
         statutory_reference: "Sec 139(9) & AIS rules",
@@ -657,7 +657,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
       {
         id: "act_02",
         title: "Confirm 80D Health Insurance Payment Proof",
-        description: "Upload non-cash bank receipt for ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹25,000 mediclaim deduction under Section 80D.",
+        description: "Upload non-cash bank receipt for ₹25,000 mediclaim deduction under Section 80D.",
         category: "VERIFICATION",
         status: "PENDING",
         statutory_reference: "Sec 80D",
@@ -666,7 +666,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
       {
         id: "act_03",
         title: "Select Authoritative Tax Regime",
-        description: "New Regime delivers ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹27,586 lower tax. Mark New Regime as preferred filing choice.",
+        description: "New Regime delivers ₹27,586 lower tax. Mark New Regime as preferred filing choice.",
         category: "FILING",
         status: "COMPLETED",
         potential_savings_inr: 27586,
@@ -696,7 +696,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
     ];
 
     if (lastUserMessage.includes("regime") || lastUserMessage.includes("better")) {
-      reply = "Based on your active Tax Twin (v2) for FY 2025-26 / AY 2026-27, the **New Tax Regime is recommended**.\n\nÃ¢â‚¬Â¢ **New Regime Tax:** Ã¢â€šÂ¹1,02,986 (Effective Rate: 7.01%)\nÃ¢â‚¬Â¢ **Old Regime Tax:** Ã¢â€šÂ¹1,30,572 (Effective Rate: 8.89%)\nÃ¢â‚¬Â¢ **Net Savings:** **Ã¢â€šÂ¹27,586**\n\n**Statutory Rationale:** Even though you declared Ã¢â€šÂ¹4,25,000 in Chapter VI-A deductions (80C Ã¢â€šÂ¹1.5L + 80D Ã¢â€šÂ¹25k + Home Loan 24b Ã¢â€šÂ¹2L), the lower progressive slabs (0-4L Nil, 4-8L 5%, 8-12L 10%, 12-16L 15%) combined with the Ã¢â€šÂ¹75,000 standard deduction under Section 16(ia) in the New Regime produce a significantly lower net tax burden.";
+      reply = "Based on your active Tax Twin (v2) for FY 2025-26 / AY 2026-27, the **New Tax Regime is recommended**.\n\n• **New Regime Tax:** ₹1,02,986 (Effective Rate: 7.01%)\n• **Old Regime Tax:** ₹1,30,572 (Effective Rate: 8.89%)\n• **Net Savings:** **₹27,586**\n\n**Statutory Rationale:** Even though you declared ₹4,25,000 in Chapter VI-A deductions (80C ₹1.5L + 80D ₹25k + Home Loan 24b ₹2L), the lower progressive slabs (0-4L Nil, 4-8L 5%, 8-12L 10%, 12-16L 15%) combined with the ₹75,000 standard deduction under Section 16(ia) in the New Regime produce a significantly lower net tax burden.";
       toolExecution = {
         tool_name: "compare_regimes",
         status: "completed",
@@ -707,7 +707,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
         { source_title: "Standard Deduction for Salaried", section: "Section 16(ia)" },
       ];
     } else if (lastUserMessage.includes("taxable income") || lastUserMessage.includes("calculation") || lastUserMessage.includes("explain my tax")) {
-      reply = "Here is how your taxable income and tax liability are audited by the deterministic engine:\n\n1. **Gross Salary:** Ã¢â€šÂ¹14,50,000 (Form 16 Part B)\n2. **Other Income (Savings Interest):** Ã¢â€šÂ¹18,500\n3. **Gross Total Income:** Ã¢â€šÂ¹14,68,500\n4. **Standard Deduction:** -Ã¢â€šÂ¹75,000 (Sec 16(ia))\n5. **Taxable Income:** **Ã¢â€šÂ¹13,93,500**\n6. **Slab-Wise Tax:** Ã¢â€šÂ¹99,025\n7. **Sec 87A Rebate:** Ã¢â€šÂ¹0 (Taxable income exceeds Ã¢â€šÂ¹12,00,000 limit for AY 2026-27)\n8. **Health & Education Cess (4%):** +Ã¢â€šÂ¹3,961\nÃ¢â‚¬Â¢ **Final Tax Liability:** **Ã¢â€šÂ¹1,02,986**";
+      reply = "Here is how your taxable income and tax liability are audited by the deterministic engine:\n\n1. **Gross Salary:** ₹14,50,000 (Form 16 Part B)\n2. **Other Income (Savings Interest):** ₹18,500\n3. **Gross Total Income:** ₹14,68,500\n4. **Standard Deduction:** -₹75,000 (Sec 16(ia))\n5. **Taxable Income:** **₹13,93,500**\n6. **Slab-Wise Tax:** ₹99,025\n7. **Sec 87A Rebate:** ₹0 (Taxable income exceeds ₹12,00,000 limit for AY 2026-27)\n8. **Health & Education Cess (4%):** +₹3,961\n• **Final Tax Liability:** **₹1,02,986**";
       toolExecution = {
         tool_name: "calculate_tax",
         status: "completed",
@@ -718,7 +718,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
         { source_title: "Health & Education Cess", section: "Finance Act 2025" },
       ];
     } else if (lastUserMessage.includes("ais") || lastUserMessage.includes("conflict")) {
-      reply = "Your Tax Twin v2 has **1 document conflict** requiring reconciliation before filing:\n\nÃ¢â‚¬Â¢ **Field:** Savings Bank Interest\nÃ¢â‚¬Â¢ **Self-Reported Baseline:** Ã¢â€šÂ¹12,000\nÃ¢â‚¬Â¢ **AIS (Annual Information Statement) Value:** Ã¢â€šÂ¹18,500 across 3 reporting banks\nÃ¢â‚¬Â¢ **Difference:** +Ã¢â€šÂ¹6,500 unaccounted interest income\n\n**Action Required:** If you accept the AIS value of Ã¢â€šÂ¹18,500, our system will generate **Tax Twin v3** with the updated interest fact. This prevents an automated Section 139(9) defective return or CP-2000 mismatch notice from the department.";
+      reply = "Your Tax Twin v2 has **1 document conflict** requiring reconciliation before filing:\n\n• **Field:** Savings Bank Interest\n• **Self-Reported Baseline:** ₹12,000\n• **AIS (Annual Information Statement) Value:** ₹18,500 across 3 reporting banks\n• **Difference:** +₹6,500 unaccounted interest income\n\n**Action Required:** If you accept the AIS value of ₹18,500, our system will generate **Tax Twin v3** with the updated interest fact. This prevents an automated Section 139(9) defective return or CP-2000 mismatch notice from the department.";
       toolExecution = {
         tool_name: "get_tax_twin_conflicts",
         status: "completed",
@@ -729,7 +729,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
         { source_title: "Defective Return & Discrepancies", section: "Sec 139(9)" },
       ];
     } else if (lastUserMessage.includes("nps") || lastUserMessage.includes("50,000") || lastUserMessage.includes("what if")) {
-      reply = "Simulating an additional voluntary contribution of **Ã¢â€šÂ¹50,000 in NPS Tier-1** under Section 80CCD(1B):\n\nÃ¢â‚¬Â¢ **Under Old Regime:** Reduces taxable income by Ã¢â€šÂ¹50,000, saving Ã¢â€šÂ¹15,600 in tax (Total tax drops from Ã¢â€šÂ¹1,30,572 to Ã¢â€šÂ¹1,14,972).\nÃ¢â‚¬Â¢ **Under New Regime:** Section 80CCD(1B) deductions are **not deductible** under Section 115BAC. Therefore, your New Regime liability remains Ã¢â€šÂ¹1,02,986.\n\n**Conclusion:** Even after investing Ã¢â€šÂ¹50,000 in NPS, the New Regime is still cheaper by **Ã¢â€šÂ¹11,986**! You can test and model this isolated scenario in the What-If Lab.";
+      reply = "Simulating an additional voluntary contribution of **₹50,000 in NPS Tier-1** under Section 80CCD(1B):\n\n• **Under Old Regime:** Reduces taxable income by ₹50,000, saving ₹15,600 in tax (Total tax drops from ₹1,30,572 to ₹1,14,972).\n• **Under New Regime:** Section 80CCD(1B) deductions are **not deductible** under Section 115BAC. Therefore, your New Regime liability remains ₹1,02,986.\n\n**Conclusion:** Even after investing ₹50,000 in NPS, the New Regime is still cheaper by **₹11,986**! You can test and model this isolated scenario in the What-If Lab.";
       toolExecution = {
         tool_name: "create_scenario",
         status: "completed",
@@ -739,7 +739,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
         { source_title: "Deduction in Respect of Contribution to National Pension System", section: "Section 80CCD(1B)" },
       ];
     } else if (lastUserMessage.includes("filing") || lastUserMessage.includes("complete") || lastUserMessage.includes("before filing")) {
-      reply = "To reach 100% filing readiness for AY 2026-27, please complete these 3 pending items:\n\n1. **Reconcile AIS Interest Conflict:** Accept or clarify the Ã¢â€šÂ¹6,500 savings interest discrepancy in `/documents` to create Tax Twin v3.\n2. **Verify 80D Proof:** Upload the non-cash payment receipt for your Ã¢â€šÂ¹25,000 health insurance policy.\n3. **Confirm Regime Choice:** Keep New Regime selected (delivers Ã¢â€šÂ¹27,586 lower tax liability).\n\n**Statutory Deadline:** July 31, 2026 under Section 139(1).";
+      reply = "To reach 100% filing readiness for AY 2026-27, please complete these 3 pending items:\n\n1. **Reconcile AIS Interest Conflict:** Accept or clarify the ₹6,500 savings interest discrepancy in `/documents` to create Tax Twin v3.\n2. **Verify 80D Proof:** Upload the non-cash payment receipt for your ₹25,000 health insurance policy.\n3. **Confirm Regime Choice:** Keep New Regime selected (delivers ₹27,586 lower tax liability).\n\n**Statutory Deadline:** July 31, 2026 under Section 139(1).";
       toolExecution = {
         tool_name: "get_filing_readiness",
         status: "completed",
@@ -749,7 +749,7 @@ export class MockTaxCopilotApiClient implements TaxCopilotApiClient {
         { source_title: "Statutory Return Filing Timelines", section: "Section 139(1)" },
       ];
     } else {
-      reply = "I have reviewed your Tax Twin v2. Your gross income is Ã¢â€šÂ¹14,68,500 and estimated tax is Ã¢â€šÂ¹1,02,986 under the New Regime. You have 1 pending conflict on AIS savings interest and 1 item requiring 80D confirmation. What would you like to explore?";
+      reply = "I have reviewed your Tax Twin v2. Your gross income is ₹14,68,500 and estimated tax is ₹1,02,986 under the New Regime. You have 1 pending conflict on AIS savings interest and 1 item requiring 80D confirmation. What would you like to explore?";
     }
 
     return {
