@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tax_copilot_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: taxcopilot
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taxcopilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tax-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tax_copilot_engine
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/taxcopilot?schema=public"
+      NODE_ENV: "development"
+      WATCHPACK_POLLING: "true"
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - ./tests:/app/tests
+      - ./package.json:/app/package.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npx prisma db push && npm run dev"
+
+  ai-backend:
+    build:
+      context: ./ai-backend
+      dockerfile: Dockerfile
+    container_name: tax_copilot_ai
+    restart: always
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    environment:
+      PORT: "3002"
+      TAX_ENGINE_URL: "http://tax-engine:3000"
+      NODE_ENV: "development"
+    depends_on:
+      - tax-engine
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tax_copilot_frontend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_ENABLE_MOCKS: "false"
+      NEXT_PUBLIC_TAX_API_URL: "http://localhost:3000"
+      NEXT_PUBLIC_AI_API_URL: "http://localhost:3002"
+    depends_on:
+      - tax-engine
+      - ai-backend
+
+volumes:
+  postgres_data:
