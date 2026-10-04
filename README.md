@@ -48,3 +48,5 @@ docker compose run --rm tax-engine npm test
 2. **Deterministic Arithmetic**: Gemini explains and orchestrates; Member 1 computes all numerical tax arithmetic.
 3. **No Client-Side Math**: Member 3's frontend consumes authoritative backend API payloads exclusively.
 4. **Security**: All API keys and database credentials remain strictly server-side.
+## Contributors
+- Navneeth Reddy
